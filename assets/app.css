@@ -1,0 +1,88 @@
+:root {
+  color-scheme: light dark;
+  --color-bg: #f6f5f1;
+  --color-panel: #ffffff;
+  --color-fg: #1d1c1a;
+  --color-fg-muted: #6b6862;
+  --color-border-line: #e3e0d8;
+  --color-ok: #1f7a4a;
+  --color-warn: #a35b00;
+  --color-bad: #b42318;
+  --series-1: #2f6fd6;
+  --series-2: #d9622b;
+  --series-3: #2a9d6f;
+  --series-4: #8a5cd1;
+  --series-5: #c2417f;
+  --series-6: #3d9bb5;
+  --series-7: #a08a1c;
+  --series-8: #6b7280;
+  --cds-chart-grid: #ebe8e1;
+  --cds-chart-axis: #c9c5bb;
+  --cds-chart-muted: #b9b5ab;
+  --cds-chart-reference: #8f8b82;
+  --cds-surface-popover: #ffffff;
+  --cds-border: #dcd8ce;
+  --cds-text-secondary: #6b6862;
+  --cds-shadow-popover: 0 6px 24px rgba(0, 0, 0, .12);
+  --cds-radius: 10px;
+  --cds-gap-xs: 4px; --cds-gap-sm: 8px; --cds-gap-md: 14px; --cds-gap-lg: 22px; --cds-gap-xl: 32px;
+  --cds-pad-xs: 4px; --cds-pad-sm: 8px; --cds-pad-md: 12px; --cds-pad-lg: 16px; --cds-pad-xl: 24px;
+  --cds-font-size-caption: 12.5px;
+  --cds-font-size-body: 15px;
+  --cds-font-size-heading: 17px;
+  --cds-font-size-title: 26px;
+  --cds-font-weight-medium: 600;
+  --cds-dur-slow: .3s;
+  --cds-ease-out: cubic-bezier(.2, .7, .2, 1);
+  --font-anthropic-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-anthropic-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #141412;
+    --color-panel: #1e1d1b;
+    --color-fg: #eeece6;
+    --color-fg-muted: #a29f97;
+    --color-border-line: #33322e;
+    --color-ok: #4cc38a;
+    --color-warn: #f0a742;
+    --color-bad: #f2685c;
+    --series-1: #6a9cf0;
+    --series-2: #f08a52;
+    --series-3: #4cc38a;
+    --series-4: #a98be6;
+    --series-5: #e0729f;
+    --series-6: #64b9d2;
+    --series-7: #cdb53a;
+    --series-8: #9aa0aa;
+    --cds-chart-grid: #2b2a27;
+    --cds-chart-axis: #45433e;
+    --cds-chart-muted: #55534d;
+    --cds-chart-reference: #7d7a72;
+    --cds-surface-popover: #262522;
+    --cds-border: #3b3a35;
+    --cds-text-secondary: #a29f97;
+    --cds-shadow-popover: 0 6px 24px rgba(0, 0, 0, .5);
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); font-family: var(--font-anthropic-sans); -webkit-text-size-adjust: 100%; }
+body { min-height: 100vh; }
+a { color: inherit; }
+
+.app-bar { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--color-bg) 88%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--color-border-line); padding: env(safe-area-inset-top) 0 0; }
+.app-bar-in { max-width: 72rem; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+.app-name { font-family: var(--font-anthropic-serif); font-size: 19px; margin-right: auto; text-decoration: none; }
+.app-tabs { display: inline-flex; border: 1px solid var(--color-border-line); border-radius: 999px; overflow: hidden; }
+.app-tabs a { text-decoration: none; font-size: 14px; padding: 6px 14px; color: var(--color-fg-muted); }
+.app-tabs a[aria-current="page"] { background: var(--color-fg); color: var(--color-bg); }
+.app-updated { max-width: 72rem; margin: 0 auto; padding: 0 16px 6px; font-size: 12px; color: var(--color-fg-muted); }
+
+#dash-root { max-width: 72rem; margin: 0 auto; padding: 16px 16px calc(32px + env(safe-area-inset-bottom)); }
+#dash-root :is(b, strong) { font-weight: 600; }
+
+/* loading placeholder used by the pages */
+.dash-skeleton { position: relative; color: transparent !important; min-height: 1.2em; }
+.dash-skeleton::after { content: ""; position: absolute; inset: 0; border-radius: 6px; background: linear-gradient(90deg, var(--cds-chart-grid), var(--color-border-line), var(--cds-chart-grid)); background-size: 200% 100%; animation: dash-pulse 1.4s ease-in-out infinite; }
+@keyframes dash-pulse { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .dash-skeleton::after { animation: none; } }

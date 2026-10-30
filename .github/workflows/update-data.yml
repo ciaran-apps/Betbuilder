@@ -1,0 +1,57 @@
+name: Update data
+
+on:
+  schedule:
+    # times are UTC: early morning after the source's overnight refresh,
+    # then midday and early evening so predictions are fresh before kickoffs
+    - cron: "40 5 * * *"
+    - cron: "10 11 * * *"
+    - cron: "10 17 * * *"
+  workflow_dispatch: {} # "Run workflow" button in the Actions tab
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Get the source data (FPL Core Insights)
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/olbauday/FPL-Core-Insights "$RUNNER_TEMP/fplci"
+          git -C "$RUNNER_TEMP/fplci" sparse-checkout set "data/2026-2027"
+
+      - name: Build
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 -I scripts/build_from_fplci.py "$RUNNER_TEMP/fplci/data/2026-2027" "$RUNNER_TEMP/out" --log data/prediction_log.json
+
+      - name: Check
+        run: python3 -I scripts/check_data.py "$RUNNER_TEMP/out" data/prediction_log.json
+
+      - name: Commit if anything changed
+        run: |
+          changed=0
+          for f in team_games players fixtures previews pred_fixtures pred_results prediction_log; do
+            if ! cmp -s "$RUNNER_TEMP/out/$f.json" "data/$f.json"; then cp "$RUNNER_TEMP/out/$f.json" "data/$f.json"; changed=1; fi
+          done
+          if [ "$changed" = 1 ]; then
+            cp "$RUNNER_TEMP/out/meta.json" data/meta.json
+            git config user.name "betbuilder-bot"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data
+            git commit -m "Update data $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+          else
+            echo "No changes."
+          fi

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Betbuilder · Match picks</title>
+<meta name="description" content="Premier League team and player stats, match picks and a prediction tracker.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141412" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Betbuilder">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/app.css">
+<script>window.DASH_PARAMS = {"fixture": null, "out": []};</script>
+<script src="assets/d3.min.js"></script>
+<script src="assets/dash.js"></script>
+</head>
+<body>
+<header class="app-bar"><div class="app-bar-in"><a class="app-name" href="./">Betbuilder</a><nav class="app-tabs"><a href="./" aria-current="page">Picks</a><a href="stats.html">Stats</a></nav></div><div class="app-updated" id="app-updated"></div></header>
+<div id="dash-root">
+<style>
+.mp { font-family: var(--font-anthropic-sans); color: var(--color-fg); display: flex; flex-direction: column; gap: var(--cds-gap-lg); max-width: 72rem; margin-inline: auto; }
+.mp-top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--cds-gap-md); }
+.mp-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; line-height: 1.15; }
+.mp-sub { margin: var(--cds-gap-xs) 0 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); min-height: 1.4em; }
+.mp-sel { display: inline-flex; align-items: center; background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); }
+.mp-sel select { font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg); background: transparent; border: 0; min-width: min(80vw, 20rem); }
+.mp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: var(--cds-gap-md); }
+.mp-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-height: 11.5rem; display: flex; flex-direction: column; gap: var(--cds-gap-sm); min-width: 0; }
+.mp-card.wide { grid-column: span 2; }
+@media (max-width: 40rem) { .mp-card.wide { grid-column: auto; } }
+.mp-k { display: flex; align-items: center; justify-content: space-between; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); text-transform: uppercase; letter-spacing: .04em; }
+.mp-conf { text-transform: none; letter-spacing: 0; border: 1px solid var(--color-border-line); border-radius: 999px; padding: 0 8px; white-space: nowrap; }
+.mp-conf.good { color: var(--color-ok); }
+.mp-pick { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 2px var(--cds-gap-sm); }
+.mp-name { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); line-height: 1.15; overflow-wrap: anywhere; }
+.mp-pct { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); line-height: 1.15; font-variant-numeric: tabular-nums; }
+.mp-team { display: inline-flex; align-items: center; gap: 6px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.mp-sw { width: .625rem; height: .625rem; border-radius: 50%; flex: none; }
+.mp-x { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); background: none; border: 1px solid var(--color-border-line); border-radius: 999px; padding: 2px 10px; cursor: pointer; justify-self: end; white-space: nowrap; }
+.mp-x:hover { color: var(--color-fg); border-color: var(--color-fg-muted); }
+.mp-bar { grid-column: 1 / -1; height: 6px; border-radius: 999px; background: var(--cds-chart-grid); overflow: hidden; margin-top: 4px; }
+.mp-bar i { display: block; height: 100%; border-radius: 999px; }
+.mp-next { margin-top: auto; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+.mp-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: var(--cds-gap-md); }
+.mp-corner-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: calc(var(--cds-font-size-title) * 1.6); line-height: 1; font-variant-numeric: tabular-nums; }
+.mp-split { display: flex; justify-content: space-between; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.mp-lines { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; text-align: center; }
+.mp-lines div { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 4px 2px; }
+.mp-lines b { display: block; font-weight: 600; color: var(--color-fg); }
+.mp-lines span { color: var(--color-fg-muted); }
+.mp-tablecard { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-lg) var(--cds-pad-md); }
+.mp-scroll { overflow-x: auto; }
+.mp-t { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 30rem; }
+.mp-t th { text-align: left; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); padding: var(--cds-pad-sm) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); width: 40%; }
+.mp-t th.cat { width: 20%; }
+.mp-t th .mp-team { font-size: var(--cds-font-size-body); color: var(--color-fg); }
+.mp-t td { padding: var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); vertical-align: top; }
+.mp-t tbody tr:last-child td { border-bottom: 0; }
+.mp-t td.cat { font-size: var(--cds-font-size-caption); color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+.mp-t td.cat .mp-conf { display: inline-block; margin-top: 4px; font-weight: 400; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.mp-t td.cat .mp-conf.good { color: var(--color-ok); }
+.mp-c { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 2px var(--cds-gap-sm); }
+.mp-c .nm { font-size: var(--cds-font-size-body); font-weight: 600; overflow-wrap: anywhere; }
+.mp-c .pc { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-heading); }
+.mp-c .x { font: inherit; font-size: var(--cds-font-size-caption); line-height: 1; color: var(--color-fg-muted); background: none; border: 1px solid var(--color-border-line); border-radius: 999px; width: 1.5rem; height: 1.5rem; padding: 0; cursor: pointer; }
+.mp-c .x:hover { color: var(--color-fg); border-color: var(--color-fg-muted); }
+.mp-c .bar { grid-column: 1 / -1; height: 4px; border-radius: 999px; background: var(--cds-chart-grid); overflow: hidden; }
+.mp-c .bar i { display: block; height: 100%; border-radius: 999px; }
+.mp-c .nx { grid-column: 1 / -1; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.mp-c .pos { grid-column: 1 / -1; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.mp-corn { font-family: var(--font-anthropic-serif); font-size: var(--cds-font-size-heading); }
+.mp-corn-total { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: 2px; }
+@media (max-width: 40rem) {
+  .mp-tablecard { padding: var(--cds-pad-xs) var(--cds-pad-sm) var(--cds-pad-sm); }
+  .mp-t { min-width: 0; table-layout: fixed; }
+  .mp-t th, .mp-t td { padding: var(--cds-pad-sm) 4px; }
+  .mp-t th.cat { width: 26%; }
+  .mp-t th { width: 37%; }
+  .mp-t th .mp-team { font-size: var(--cds-font-size-caption); font-weight: 600; }
+  .mp-t td.cat .mp-conf { font-size: 11px; padding: 0 5px; }
+  .mp-c { grid-template-columns: 1fr auto; }
+  .mp-c .nm { grid-column: 1 / -1; font-size: 14px; }
+  .mp-c .pc { font-size: var(--cds-font-size-body); }
+  .mp-c .x { width: 1.6rem; height: 1.6rem; }
+  .mp-c .nx { font-size: 11px; }
+  .mp-lines { grid-template-columns: repeat(3, 1fr); }
+}
+.mp-out { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-xs); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.mp-out[hidden] { display: none; }
+.mp-chip { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: 999px; padding: 2px 10px; cursor: pointer; }
+.mp-chip.all { color: var(--color-fg-muted); }
+.mp-foot { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; }
+.mp-empty { color: var(--color-fg-muted); font-size: var(--cds-font-size-body); }
+.mp-fail { display: flex; align-items: center; justify-content: center; gap: var(--cds-gap-xs); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); flex: 1; }
+.mp-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+[data-dash-source-state=empty] { color: transparent; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+
+<div class="mp">
+  <div class="mp-top" id="top">
+    <div>
+      <h1 class="mp-title" id="mp-title">Match picks</h1>
+      <p class="mp-sub" id="mp-sub">—</p>
+    </div>
+    <label class="mp-sel"><select id="mp-sel" aria-label="Match" data-source="fixtures"></select></label>
+  </div>
+
+  <div class="mp-tablecard">
+    <div class="mp-scroll">
+      <table class="mp-t" id="picks">
+        <thead><tr>
+          <th class="cat" scope="col">Market</th>
+          <th scope="col"><span class="mp-team"><span class="mp-sw" id="sw-h"></span><span id="th-h">Home</span></span></th>
+          <th scope="col"><span class="mp-team"><span class="mp-sw" id="sw-a"></span><span id="th-a">Away</span></span></th>
+        </tr></thead>
+        <tbody id="picks-body" data-source="previews fixtures"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mp-out" id="mp-out" hidden></div>
+
+  <p class="mp-foot">Tap × on anyone missing from the team sheet and the next best player from that team takes his place in every row. Chances come from each player's season rate per 90, his likely minutes (last 3 league games, FPL injury flags) and the opponent; the labels show how each category did when tested on earlier games. Predictions are made before kickoff and don't know the line-ups. For interest, not betting advice.</p>
+</div>
+
+<script>
+(() => {
+  const sel = document.getElementById('mp-sel');
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const pct = d3.format('.0%');
+  const f1 = d3.format('.1f');
+  const kf = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
+  const fail = (el) => { el.replaceChildren(mk('div', 'mp-fail', 'Failed to load')); el.classList.remove('dash-skeleton'); };
+
+  sel.addEventListener('change', () => dash.setParams({ fixture: sel.value }));
+  // players ticked off as not playing: a filter, as "fixture_id|player_id" entries
+  const outList = () => dash.params().out || [];
+  const setOut = (list) => dash.setParams({ out: list });
+  document.getElementById('picks').addEventListener('click', (e) => {
+    const b = e.target.closest('button.x');
+    if (b) setOut([...new Set([...outList(), `${b.dataset.f}|${b.dataset.p}`])]);
+  });
+  document.getElementById('mp-out').addEventListener('click', (e) => {
+    const b = e.target.closest('button.mp-chip');
+    if (!b) return;
+    if (b.dataset.all) setOut(outList().filter((k) => !k.startsWith(`${b.dataset.f}|`)));
+    else setOut(outList().filter((k) => k !== `${b.dataset.f}|${b.dataset.p}`));
+  });
+
+  const pickEl = (r, k, color) => {
+    const wrap = mk('div', 'mp-pick');
+    const name = mk('div', 'mp-name', r.name);
+    const p = mk('div', 'mp-pct', pct(r[k]));
+    p.dataset.source = 'previews'; p.dataset.field = k;
+    p.dataset.where = `fixture_id=${encodeURIComponent(r.fixture_id)}&player_id=${encodeURIComponent(r.player_id)}`;
+    const team = mk('span', 'mp-team'); const sw = mk('span', 'mp-sw'); sw.style.background = color;
+    team.append(sw, `${r.team_name} · ${r.position}${r.availability === 'd' ? ' · doubt' : ''}`);
+    const x = mk('button', 'mp-x', 'Not playing'); x.type = 'button'; x.dataset.f = r.fixture_id; x.dataset.p = r.player_id;
+    x.setAttribute('aria-label', `${r.name} is not playing — show the next pick`);
+    const bar = mk('div', 'mp-bar'); const i = mk('i'); i.style.width = `${r[k] * 100}%`; i.style.background = color; bar.appendChild(i);
+    wrap.append(name, p, team, x, bar);
+    return wrap;
+  };
+
+  dash.onData(() => {
+    const F = dash.data('fixtures');
+    const P = dash.data('previews');
+    const fx = (F.status === 'ok' ? F.data : []).slice().sort((a, b) => (a.kickoff < b.kickoff ? -1 : 1));
+    const nowIso = new Date().toISOString().slice(0, 19);
+    const want = dash.params().fixture;
+    const f = fx.find((x) => x.fixture_id === want) || fx.find((x) => x.kickoff > nowIso) || fx[0];
+    if (document.activeElement !== sel) {
+      sel.replaceChildren(...fx.map((x) => new Option(`${x.label} — ${kf.format(new Date(x.kickoff + 'Z'))}${x.kickoff <= nowIso ? ' (started)' : ''}`, x.fixture_id)));
+      if (f) sel.value = f.fixture_id;
+    }
+    const sub = document.getElementById('mp-sub');
+    const tb = document.getElementById('picks-body');
+    tb.replaceChildren();
+    const failRow = () => { const tr = mk('tr'); const td = mk('td'); td.colSpan = 3; td.appendChild(mk('div', 'mp-fail', 'Failed to load')); tr.appendChild(td); tb.appendChild(tr); };
+    if (F.status === 'error' || P.status === 'error') { sub.textContent = ''; failRow(); return; }
+    if (!f) { sub.textContent = F.status === 'ok' ? 'No league games in the next 8 days.' : '—'; return; }
+    document.getElementById('mp-title').textContent = f.label;
+    sub.textContent = `Gameweek ${f.gw} · ${kf.format(new Date(f.kickoff + 'Z'))}`;
+    const color = { [f.home]: dash.colors[0], [f.away]: dash.colors[1] };
+    document.getElementById('th-h').textContent = f.home_name; document.getElementById('sw-h').style.background = color[f.home];
+    document.getElementById('th-a').textContent = f.away_name; document.getElementById('sw-a').style.background = color[f.away];
+
+    const out = new Set(outList().filter((k) => k.startsWith(`${f.fixture_id}|`)).map((k) => k.split('|')[1]));
+    const all = P.status === 'ok' ? P.data.filter((r) => r.fixture_id === f.fixture_id) : [];
+    const rows = all.filter((r) => !out.has(r.player_id));
+    const ranked = (team, k) => rows.filter((r) => r.team === team && r[k] != null).sort((a, b) => b[k] - a[k]);
+
+    const pickCell = (r, k, nextR) => {
+      const td = mk('td');
+      if (!r) { td.appendChild(mk('span', 'mp-next', P.status === 'ok' ? 'No players left' : '—')); return td; }
+      const c = mk('div', 'mp-c');
+      const p = mk('span', 'pc', pct(r[k]));
+      p.dataset.source = 'previews'; p.dataset.field = k;
+      p.dataset.where = `fixture_id=${encodeURIComponent(r.fixture_id)}&player_id=${encodeURIComponent(r.player_id)}`;
+      const x = mk('button', 'x', '×'); x.type = 'button'; x.dataset.f = r.fixture_id; x.dataset.p = r.player_id;
+      x.title = `${r.name} isn't playing`; x.setAttribute('aria-label', `${r.name} is not playing — show the next pick`);
+      const bar = mk('span', 'bar'); const i = mk('i'); i.style.width = `${r[k] * 100}%`; i.style.background = color[r.team]; bar.appendChild(i);
+      c.append(mk('span', 'nm', r.name), p, x, bar);
+      if (r.availability === 'd') c.appendChild(mk('span', 'pos', 'doubt'));
+      if (nextR) c.appendChild(mk('span', 'nx', `Next: ${nextR.name} ${pct(nextR[k])}`));
+      td.appendChild(c);
+      return td;
+    };
+    const catCell = (label, conf, good) => {
+      const td = mk('td', 'cat'); td.append(label, mk('br')); td.appendChild(mk('span', `mp-conf${good ? ' good' : ''}`, conf)); return td;
+    };
+    const markets = [
+      ['Goalscorer', 'p_score', 'some edge', false, 0],
+      ['Assist', 'p_assist', 'no edge yet', false, 0],
+      ['Shot on target', 'p_sot', 'best tested', true, 0],
+      ['To be fouled', 'p_fouled', 'best tested', true, 0],
+      ['To commit a foul', 'p_foul', 'slight edge', false, 0],
+      ['To be booked (1)', 'p_card', 'no edge yet', false, 0],
+      ['To be booked (2)', 'p_card', 'no edge yet', false, 1],
+    ];
+    if (P.status === 'ok') {
+      markets.forEach(([label, k, conf, good, idx]) => {
+        const tr = mk('tr');
+        tr.appendChild(catCell(label, conf, good));
+        [f.home, f.away].forEach((team) => {
+          const list = ranked(team, k);
+          const showNext = k !== 'p_card' || idx === 1;
+          tr.appendChild(pickCell(list[idx], k, showNext ? list[idx + 1] : null));
+        });
+        tb.appendChild(tr);
+      });
+    }
+    // corners
+    const tr = mk('tr');
+    tr.appendChild(catCell('Corners', 'no edge yet', false));
+    [['corners_home', f.home], ['corners_away', f.away]].forEach(([fld]) => {
+      const td = mk('td'); const v = mk('div', 'mp-corn', f1(f[fld]));
+      v.dataset.source = 'fixtures'; v.dataset.field = fld; v.dataset.where = `fixture_id=${encodeURIComponent(f.fixture_id)}`;
+      td.append(v, mk('div', 'mp-corn-total', 'expected'));
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+    const tr2 = mk('tr');
+    tr2.appendChild(catCell('Total corners', 'no edge yet', false));
+    const td2 = mk('td'); td2.colSpan = 2;
+    const big = mk('div', 'mp-corn', `${f1(f.corners_total)} expected`);
+    big.dataset.source = 'fixtures'; big.dataset.field = 'corners_total'; big.dataset.where = `fixture_id=${encodeURIComponent(f.fixture_id)}`;
+    const lines = mk('div', 'mp-lines'); lines.style.marginTop = '6px';
+    ['7_5', '8_5', '9_5', '10_5', '11_5'].forEach((l) => {
+      const d = mk('div'); d.append(mk('span', '', `Over ${l.replace('_', '.')}`), mk('b', '', pct(f[`corners_over_${l}`]))); lines.appendChild(d);
+    });
+    td2.append(big, lines); tr2.appendChild(td2); tb.appendChild(tr2);
+
+    // who has been ticked off
+    const box = document.getElementById('mp-out');
+    box.replaceChildren();
+    const gone = all.filter((r) => out.has(r.player_id));
+    box.hidden = !gone.length;
+    if (gone.length) {
+      box.append('Not playing (tap to add back):');
+      gone.forEach((r) => { const b = mk('button', 'mp-chip', `${r.name} ↺`); b.type = 'button'; b.dataset.f = f.fixture_id; b.dataset.p = r.player_id; box.appendChild(b); });
+      const a = mk('button', 'mp-chip all', 'Add everyone back'); a.type = 'button'; a.dataset.f = f.fixture_id; a.dataset.all = '1'; box.appendChild(a);
+    }
+  });
+})();
+</script>
+
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>
