@@ -76,7 +76,10 @@ a { color: inherit; }
 .app-tabs { display: inline-flex; border: 1px solid var(--color-border-line); border-radius: 999px; overflow: hidden; }
 .app-tabs a { text-decoration: none; font-size: 14px; padding: 6px 14px; color: var(--color-fg-muted); }
 .app-tabs a[aria-current="page"] { background: var(--color-fg); color: var(--color-bg); }
-.app-updated { max-width: 72rem; margin: 0 auto; padding: 0 16px 6px; font-size: 12px; color: var(--color-fg-muted); }
+.app-updated { max-width: 72rem; margin: 0 auto; padding: 0 16px 6px; font-size: 12px; color: var(--color-fg-muted); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.app-updated.stale { color: var(--color-warn); }
+.app-refresh { font: inherit; font-size: 12px; color: var(--color-fg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: 999px; padding: 3px 10px; cursor: pointer; white-space: nowrap; }
+.app-refresh:disabled { opacity: .6; }
 
 #dash-root { max-width: 72rem; margin: 0 auto; padding: 16px 16px calc(32px + env(safe-area-inset-bottom)); }
 #dash-root :is(b, strong) { font-weight: 600; }

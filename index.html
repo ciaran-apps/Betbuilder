@@ -172,7 +172,8 @@
     const fx = (F.status === 'ok' ? F.data : []).slice().sort((a, b) => (a.kickoff < b.kickoff ? -1 : 1));
     const nowIso = new Date().toISOString().slice(0, 19);
     const want = dash.params().fixture;
-    const f = fx.find((x) => x.fixture_id === want) || fx.find((x) => x.kickoff > nowIso) || fx[0];
+    const doneIso = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 19); // a game that kicked off 3+ hours ago is over
+    const f = fx.find((x) => x.fixture_id === want && x.kickoff > doneIso) || fx.find((x) => x.kickoff > nowIso) || fx[0];
     if (document.activeElement !== sel) {
       sel.replaceChildren(...fx.map((x) => new Option(`${x.label} — ${kf.format(new Date(x.kickoff + 'Z'))}${x.kickoff <= nowIso ? ' (started)' : ''}`, x.fixture_id)));
       if (f) sel.value = f.fixture_id;

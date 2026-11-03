@@ -1,6 +1,6 @@
 // Offline support: pages and data are fetched fresh when online and served
 // from the cache when offline. Bump VERSION when the app shell changes.
-const VERSION = 'betbuilder-v1';
+const VERSION = 'betbuilder-v2';
 const SHELL = ['./', 'index.html', 'stats.html', 'assets/app.css', 'assets/dash.js', 'assets/app.js',
   'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
   'assets/d3.min.js'];
