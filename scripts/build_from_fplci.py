@@ -237,8 +237,13 @@ current_team = {}
 for p in rows(os.path.join(SRC, "players.csv")):
     current_team[p["player_id"]] = (team_of_code.get(code(p["team_code"])), p)
 
+def known(xs):
+    """The values that are actually there: the source leaves a stat blank
+    for a while after a match finishes, and a blank must not crash the build."""
+    return [x for x in xs if x is not None]
+
 def mean(xs):
-    xs = list(xs)
+    xs = known(xs)
     return sum(xs) / len(xs) if xs else 0.0
 
 tg_by_team = {}
@@ -255,7 +260,7 @@ for k in ("xg", "sot", "fouls", "fouls_won", "corners"):
 def opp_factor(opp, conceded_key, league_key):
     """How much the opponent allows of a stat vs the league, shrunk to 1."""
     g = tg_by_team.get(opp, [])
-    n = len(g)
+    n = len(known(r[conceded_key] for r in g))
     allowed = mean(r[conceded_key] for r in g) if n else lg[league_key]
     return ((allowed * n + lg[league_key] * OPP_K) / (n + OPP_K)) / lg[league_key]
 
@@ -310,8 +315,9 @@ for m in sorted(upcoming, key=lambda m: m["kickoff_time"]):
     lam = {}
     for team, opp, venue in ((h, a_, "Home"), (a_, h, "Away")):
         g, og = tg_by_team.get(team, []), tg_by_team.get(opp, [])
-        cf = (mean(r["corners"] for r in g) * len(g) + lg["corners"] * OPP_K) / (len(g) + OPP_K)
-        ca = (mean(r["_corners_against"] for r in og) * len(og) + lg["corners"] * OPP_K) / (len(og) + OPP_K)
+        ng, nog = len(known(r["corners"] for r in g)), len(known(r["_corners_against"] for r in og))
+        cf = (mean(r["corners"] for r in g) * ng + lg["corners"] * OPP_K) / (ng + OPP_K)
+        ca = (mean(r["_corners_against"] for r in og) * nog + lg["corners"] * OPP_K) / (nog + OPP_K)
         lam[venue] = cf * ca / lg["corners"] * venue_ratio["corners"][venue]
     tot = lam["Home"] + lam["Away"]
     fx.update({"corners_home": round(lam["Home"], 1), "corners_away": round(lam["Away"], 1), "corners_total": round(tot, 1)})
